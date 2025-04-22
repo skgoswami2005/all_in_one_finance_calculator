@@ -105,7 +105,8 @@ class _InterestCalculatorState extends State<InterestCalculator> {
                           onPressed: calculateInterest,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white.withOpacity(0.2),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -184,14 +185,14 @@ class _InterestCalculatorState extends State<InterestCalculator> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Simple: ₹${simpleInterest.toStringAsFixed(2)}',
+                '₹${simpleInterest.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 16,
                   color: Colors.white,
                 ),
               ),
               Text(
-                'Compound: ₹${compoundInterest.toStringAsFixed(2)}',
+                '₹${compoundInterest.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 16,
                   color: Colors.white,

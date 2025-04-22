@@ -113,7 +113,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                           onPressed: calculateEMI,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white.withOpacity(0.2),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -208,14 +209,14 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                       color: Colors.white70,
                     ),
                   ),
+                  Text(
+                    'Total: ₹${totalPayment.toStringAsFixed(2)}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
                 ],
-              ),
-              Text(
-                'Total: ₹${totalPayment.toStringAsFixed(2)}',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.white70,
-                ),
               ),
             ],
           ),

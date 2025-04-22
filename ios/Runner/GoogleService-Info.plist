@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAWZKU5l0Ps09FsINLa6mEJVkkUEw5EBqU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>225237896382</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.shubhamgoswami.allInOneFinanceCalculator</string>
+	<key>PROJECT_ID</key>
+	<string>all-in-one-finance-calculator</string>
+	<key>STORAGE_BUCKET</key>
+	<string>all-in-one-finance-calculator.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:225237896382:ios:cc077dd84dccee71cd22ef</string>
+</dict>
+</plist>

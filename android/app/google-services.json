@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "225237896382",
+    "project_id": "all-in-one-finance-calculator",
+    "storage_bucket": "all-in-one-finance-calculator.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225237896382:android:98a2bfe90c616493cd22ef",
+        "android_client_info": {
+          "package_name": "com.financecalculator.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7bACWqNw8YU34Is8sAVB75AkiV7WWR4o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
