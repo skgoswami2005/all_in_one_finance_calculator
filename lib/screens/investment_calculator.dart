@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:fl_chart/fl_chart.dart';
 
 class InvestmentCalculator extends StatefulWidget {
   const InvestmentCalculator({super.key});
@@ -51,7 +52,7 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Remove the body container to apply decoration to the full scaffold
+      backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       extendBody: true,
       body: Container(
@@ -65,9 +66,9 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -238,34 +239,74 @@ class _InvestmentCalculatorState extends State<InvestmentCalculator> {
 
   Widget _buildResultsCard() {
     return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Future Value: ₹${futureValue.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Future: ₹${futureValue.toStringAsFixed(0)}',
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                  Text(
+                    'Interest: ₹${totalInterestEarned.toStringAsFixed(0)}',
+                    style: const TextStyle(fontSize: 16, color: Colors.white70),
+                  ),
+                ],
+              ),
+              Text(
+                'Invested: ₹${totalContributions.toStringAsFixed(0)}',
+                style: const TextStyle(fontSize: 16, color: Colors.white70),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            'Total Contribution: ₹${totalContributions.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.white70,
-            ),
-          ),
-          Text(
-            'Total Interest Earned: ₹${totalInterestEarned.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.white70,
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 180,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(show: false),
+                titlesData: FlTitlesData(show: false),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: List.generate(timePeriod + 1, (index) {
+                      if (selectedCalculationType == 'Lump Sum') {
+                        return FlSpot(
+                          index.toDouble(),
+                          initialInvestment *
+                              pow((1 + interestRate / 100), index),
+                        );
+                      } else {
+                        double monthlyRate = interestRate / 1200;
+                        int months = index * 12;
+                        return FlSpot(
+                          index.toDouble(),
+                          monthlyContribution *
+                              ((pow(1 + monthlyRate, months) - 1) /
+                                  monthlyRate) *
+                              (1 + monthlyRate),
+                        );
+                      }
+                    }),
+                    isCurved: true,
+                    color: Colors.white,
+                    barWidth: 2,
+                    dotData: FlDotData(show: false),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

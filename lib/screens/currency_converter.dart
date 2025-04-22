@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/exchange_rate_service.dart';
 
 class CurrencyConverter extends StatefulWidget {
   const CurrencyConverter({super.key});
@@ -14,91 +15,45 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
   String toCurrency = 'USD';
   double convertedAmount = 0;
 
-  // Sample exchange rates (in real app, fetch these from an API)
-  final Map<String, Map<String, double>> exchangeRates = {
-    'INR': {
-      'USD': 0.012,
-      'EUR': 0.011,
-      'GBP': 0.0095,
-      'AUD': 0.018,
-      'CAD': 0.016,
-      'JPY': 1.73,
-      'INR': 1.0,
-    },
-    'USD': {
-      'INR': 83.33,
-      'EUR': 0.92,
-      'GBP': 0.79,
-      'AUD': 1.52,
-      'CAD': 1.35,
-      'JPY': 144.80,
-      'USD': 1.0,
-    },
-    'EUR': {
-      'INR': 90.81,
-      'USD': 1.09,
-      'GBP': 0.85,
-      'AUD': 1.65,
-      'CAD': 1.47,
-      'JPY': 157.66,
-      'EUR': 1.0,
-    },
-    'GBP': {
-      'INR': 106.24,
-      'USD': 1.27,
-      'EUR': 1.17,
-      'AUD': 1.94,
-      'CAD': 1.72,
-      'JPY': 184.51,
-      'GBP': 1.0,
-    },
-    'AUD': {
-      'INR': 54.88,
-      'USD': 0.66,
-      'EUR': 0.61,
-      'GBP': 0.52,
-      'CAD': 0.89,
-      'JPY': 95.44,
-      'AUD': 1.0,
-    },
-    'CAD': {
-      'INR': 61.80,
-      'USD': 0.74,
-      'EUR': 0.68,
-      'GBP': 0.58,
-      'AUD': 1.13,
-      'JPY': 107.52,
-      'CAD': 1.0,
-    },
-    'JPY': {
-      'INR': 0.58,
-      'USD': 0.0069,
-      'EUR': 0.0063,
-      'GBP': 0.0054,
-      'AUD': 0.010,
-      'CAD': 0.0093,
-      'JPY': 1.0,
-    },
-  };
+  Map<String, double> currentRates = {};
+  bool isLoading = false;
+  String? error;
 
-  final List<String> currencies = [
-    'INR',
-    'USD',
-    'EUR',
-    'GBP',
-    'AUD',
-    'CAD',
-    'JPY'
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchExchangeRates();
+  }
+
+  Future<void> fetchExchangeRates() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+
+    try {
+      final rates = await ExchangeRateService.getExchangeRates(fromCurrency);
+      setState(() {
+        currentRates = rates;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
 
   void convertCurrency() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      double rate = exchangeRates[fromCurrency]![toCurrency]!;
-      convertedAmount = amount * rate;
-
-      setState(() {});
+      if (currentRates.containsKey(toCurrency)) {
+        double rate = currentRates[toCurrency]!;
+        convertedAmount = amount * rate;
+        setState(() {});
+      }
     }
   }
 
@@ -108,8 +63,22 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
       fromCurrency = toCurrency;
       toCurrency = temp;
 
+      fetchExchangeRates();
+
       if (amount > 0) {
         convertCurrency();
+      }
+    });
+  }
+
+  void onCurrencyChanged(String? newValue, bool isFrom) {
+    setState(() {
+      if (isFrom) {
+        fromCurrency = newValue!;
+        fetchExchangeRates();
+      } else {
+        toCurrency = newValue!;
+        if (amount > 0) convertCurrency();
       }
     });
   }
@@ -129,132 +98,153 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                        ),
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
-                      ),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: const Text(
-                          'Currency Converter',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Form
-                  Form(
-                    key: _formKey,
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              )
+            : error != null
+                ? Center(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildGlassTextField(
-                          label: 'Amount',
-                          onSaved: (value) => amount = double.parse(value!),
+                        Text(
+                          'Error: $error',
+                          style: const TextStyle(color: Colors.white),
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
-
-                        // Currency selection
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildCurrencyDropdown(
-                                label: 'From',
-                                value: fromCurrency,
-                                onChanged: (value) {
-                                  setState(() {
-                                    fromCurrency = value!;
-                                    if (amount > 0) convertCurrency();
-                                  });
-                                },
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: swapCurrencies,
-                              icon: const Icon(
-                                Icons.swap_horiz,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-                            Expanded(
-                              child: _buildCurrencyDropdown(
-                                label: 'To',
-                                value: toCurrency,
-                                onChanged: (value) {
-                                  setState(() {
-                                    toCurrency = value!;
-                                    if (amount > 0) convertCurrency();
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Calculate Button
                         ElevatedButton(
-                          onPressed: convertCurrency,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.2),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 3,
-                          ),
-                          child: const Text(
-                            'Convert',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          onPressed: fetchExchangeRates,
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
-                  ),
+                  )
+                : SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  icon: const Icon(
+                                    Icons.arrow_back_ios,
+                                    color: Colors.white,
+                                  ),
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  child: const Text(
+                                    'Currency Converter',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 30),
 
-                  const SizedBox(height: 40),
+                            // Form
+                            Form(
+                              key: _formKey,
+                              child: Column(
+                                children: [
+                                  _buildGlassTextField(
+                                    label: 'Amount',
+                                    onSaved: (value) =>
+                                        amount = double.parse(value!),
+                                  ),
+                                  const SizedBox(height: 20),
 
-                  // Result
-                  if (convertedAmount > 0)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        child: _buildResultsCard(),
+                                  // Currency selection
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildCurrencyDropdown(
+                                          label: 'From',
+                                          value: fromCurrency,
+                                          onChanged: (value) =>
+                                              onCurrencyChanged(value, true),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: swapCurrencies,
+                                        icon: const Icon(
+                                          Icons.swap_horiz,
+                                          color: Colors.white,
+                                          size: 28,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: _buildCurrencyDropdown(
+                                          label: 'To',
+                                          value: toCurrency,
+                                          onChanged: (value) =>
+                                              onCurrencyChanged(value, false),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Calculate Button
+                                  ElevatedButton(
+                                    onPressed: convertCurrency,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.white.withOpacity(0.2),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 3,
+                                    ),
+                                    child: const Text(
+                                      'Convert',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 40),
+
+                            // Result
+                            if (convertedAmount > 0)
+                              Center(
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 20),
+                                  child: _buildResultsCard(),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                ],
-              ),
-            ),
-          ),
-        ),
+                  ),
       ),
     );
   }
@@ -314,7 +304,8 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
               dropdownColor: const Color(0xFF6A11CB),
               style: const TextStyle(color: Colors.white, fontSize: 16),
               iconEnabledColor: Colors.white,
-              items: currencies.map((String currency) {
+              items: ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD', 'JPY']
+                  .map((String currency) {
                 return DropdownMenuItem<String>(
                   value: currency,
                   child: Text(currency),
@@ -329,7 +320,6 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
   }
 
   Widget _buildResultsCard() {
-    // Format the currency amounts with appropriate symbols
     Map<String, String> currencySymbols = {
       'INR': '₹',
       'USD': '\$',
@@ -369,13 +359,23 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Exchange Rate: 1 $fromCurrency = ${exchangeRates[fromCurrency]![toCurrency]!.toStringAsFixed(6)} $toCurrency',
+            'Exchange Rate: 1 $fromCurrency = ${currentRates[toCurrency]?.toStringAsFixed(6)} $toCurrency',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.white70,
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 8),
+          if (currentRates.isNotEmpty)
+            Text(
+              'Exchange Rate: 1 $fromCurrency = ${currentRates[toCurrency]?.toStringAsFixed(4)} $toCurrency',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
         ],
       ),
     );
